@@ -23,49 +23,13 @@ p = pipeline_config();
 clobber = 0;
 
 %% Get T1 and fiducials for each subject
+% T1: path to the T1 NIfTI
+% T1_fiducial_nas/lpa/rpa: fiducial coordinates in mm ('x y z')
 
 p.pathlist.subj_mri = p.dataset.subject_data.T1;
 p.fiducials.nas = p.dataset.subject_data.T1_fiducial_nas;
 p.fiducials.lpa = p.dataset.subject_data.T1_fiducial_lpa;
 p.fiducials.rpa = p.dataset.subject_data.T1_fiducial_rpa;
-for ss = 1:length(p.pathlist.subj_mri)
-    if contains(p.pathlist.subj_mri{ss}, ' ')
-        % Multiple, choose last unless missing/unuseable
-        T1s = strsplit(p.pathlist.subj_mri{ss}, ' ');
-        fid_nas = strsplit(p.fiducials.nas{ss}, ';');
-        fid_lpa = strsplit(p.fiducials.lpa{ss}, ';');
-        fid_rpa = strsplit(p.fiducials.rpa{ss}, ';');
-        ind = length(T1s);
-        while (contains(fid_nas{ind}, 'Missing') || contains(fid_nas{ind}, 'able')) && ind > 0
-            ind = ind-1;
-        end
-        if ind > length(T1s)
-            error('ERROR WITH FIDUCIALS');
-        end
-        p.fiducials.nas{ss} = strtrim(fid_nas{ind});
-        p.fiducials.lpa{ss} = strtrim(fid_lpa{ind});
-        p.fiducials.rpa{ss} = strtrim(fid_rpa{ind});
-        if isempty(p.dataset.subject_data.fiducial_notes{ss})
-            nifti = dir([p.dataset.dataset_dir '/' p.subject(ss) '/' p.session(ss) '/anat/*run-' num2str(ind, '%03d') '*T1w.nii.gz']);
-            p.pathlist.subj_mri{ss} = [nifti.folder '/' nifti.name];
-        else
-            indd = find(strcmp(p.pathlist.subj_mri{ss}, p.dataset.subject_data_orig.T1));
-            empty_ind = find(strcmp(p.dataset.subject_data_orig.fiducial_notes(indd), '') | strcmp(p.dataset.subject_data_orig.fiducial_notes(indd), 'Missing'));
-            indd = indd(empty_ind(1));
-            nifti = dir([p.dataset.dataset_dir '/sub-' p.dataset.subject_data_orig.UniqueID{indd} '/ses-' num2str(p.dataset.subject_data_orig.Visit(indd), '%03d') '/anat/*run-' num2str(ind, '%03d') '*T1w.nii.gz']);
-            p.pathlist.subj_mri{ss} = [nifti.folder '/' nifti.name];
-        end
-    elseif isempty(p.dataset.subject_data.fiducial_notes{ss})
-        nifti = dir([p.dataset.dataset_dir '/' p.subject(ss) '/' p.session(ss) '/anat/*run-' num2str(1, '%03d') '*T1w.nii.gz']);
-        p.pathlist.subj_mri{ss} = [nifti.folder '/' nifti.name];
-    else
-        indd = find(strcmp(p.pathlist.subj_mri{ss}, p.dataset.subject_data_orig.T1));
-        empty_ind = find(strcmp(p.dataset.subject_data_orig.fiducial_notes(indd), '') | strcmp(p.dataset.subject_data_orig.fiducial_notes(indd), 'Missing'));
-        indd = indd(empty_ind(1));
-        nifti = dir([p.dataset.dataset_dir '/sub-' p.dataset.subject_data_orig.UniqueID{indd} '/ses-' num2str(p.dataset.subject_data_orig.Visit(indd), '%03d') '/anat/*run-' num2str(1, '%03d') '*T1w.nii.gz']);
-        p.pathlist.subj_mri{ss} = [nifti.folder '/' nifti.name];
-    end
-end
 
 %% Forward model
 

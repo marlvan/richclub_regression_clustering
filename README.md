@@ -40,10 +40,10 @@ specific to your MEG system) there before running.
 
 The participant spreadsheet has one row per participant with the columns
 `UniqueID`, `Visit`, `Run`, `Sex`, `Age`, `MEG_Rest` (path to the CTF `.ds`),
-`megprep_ica` (comma-separated ICA components to remove), `T1`,
-`T1_fiducial_nas`, `T1_fiducial_lpa`, `T1_fiducial_rpa`, `fiducial_notes`
-(see `p04_head_model.m`) and `including_final` (1 for participants with at
-least 12 clean epochs, one run per participant).
+`megprep_ica` (comma-separated ICA components to remove), `T1` (path to the
+T1 NIfTI), `T1_fiducial_nas`, `T1_fiducial_lpa`, `T1_fiducial_rpa` (fiducial
+coordinates in mm, as `x y z`) and `including_final` (1 for participants with
+at least 12 clean epochs, one run per participant).
 
 Toolboxes go in `preprocessing/repos/`:
 

@@ -14,13 +14,10 @@ function p = pipeline_config()
 table_file = '/path/to/participants.xlsx';
 opts = detectImportOptions(table_file);
 opts = setvartype(opts, 'UniqueID', 'string');
-p.dataset.subject_data_orig = readtable(table_file, opts);
-p.dataset.subject_data = p.dataset.subject_data_orig(p.dataset.subject_data_orig.including_final == 1, :);
+p.dataset.subject_data = readtable(table_file, opts);
+p.dataset.subject_data = p.dataset.subject_data(p.dataset.subject_data.including_final == 1, :);
 
 %% DIRECTORIES
-
-% Raw data (BIDS), used to find each participant's T1
-p.dataset.dataset_dir = '/path/to/sourcedata';
 
 % Output directory for all derivatives
 p.dataset.derivatives_dir = '/path/to/derivatives';
@@ -42,7 +39,7 @@ p.paths.subj_dir = @(id) [p.dataset.derivatives_dir '/' p.subject(id) '/' p.sess
 p.paths.headmodel_dir = @(id) [p.paths.subj_dir(id),'/headmodel'];
 p.paths.epoching_dir = @(id) [p.paths.subj_dir(id),'/preprocessing/'];
 p.paths.beamforming_dir = @(id) [p.paths.subj_dir(id),'/beamforming/'];
-p.paths.connectivity_dir = @(id) [p.paths.subj_dir(id),'/connectivity_alltrials/'];
+p.paths.connectivity_dir = @(id) [p.paths.subj_dir(id),'/connectivity/'];
 
 %% EPOCHING PARAMETERS
 
