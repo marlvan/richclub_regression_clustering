@@ -87,7 +87,7 @@ def run_pipeline(
     prefix,
     subsample_size,
     cluster_max=5,
-    n_iter=100000,
+    n_iter=10000,
     n_perm=100,
     percentile=99,
     n_jobs=-1,
@@ -102,7 +102,7 @@ def run_pipeline(
     # Z-score the inputs (the GMM is fit on age + features jointly)
     x_z = ss.zscore(x)
     y_z = ss.zscore(y)
-    data_z = ss.zscore(np.hstack([x_z.reshape(-1, 1), y_z]))
+    data_z = ss.zscore(np.hstack([x.reshape(-1, 1), y]))
 
     main_path = os.path.join(output_dir, f"{prefix}.csv")
     if not os.path.exists(main_path):
@@ -113,14 +113,13 @@ def run_pipeline(
     if n_perm == 0:
         return
 
-    # Null distribution: re-run with age permuted
+    # Null distribution: re-run with age permuted in the regressions (GMM still fit on the original data)
     for p in range(n_perm):
         perm_path = os.path.join(output_dir, f"{prefix}_randperm{p:03d}.csv")
         if os.path.exists(perm_path):
             continue
         x_perm = np.random.permutation(x_z)
-        data_perm = ss.zscore(np.hstack([x_perm.reshape(-1, 1), y_z]))
-        feature_perm = compute_feature_matrix(x_perm, y_z, data_perm, subsample_size, cluster_max, n_iter, n_jobs)
+        feature_perm = compute_feature_matrix(x_perm, y_z, data_z, subsample_size, cluster_max, n_iter, n_jobs)
         np.savetxt(perm_path, feature_perm, delimiter=",")
 
     # Load and threshold against per-cell percentile of the null

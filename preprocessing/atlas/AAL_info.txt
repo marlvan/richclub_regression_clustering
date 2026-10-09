@@ -1,0 +1,1 @@
+This node list contains the centroid of each of the 90 cerebral regions in the Automated Anatomical Labelling atlas (MNI coordinates, mm). Labels are in AAL90_labels.txt, in the same order.

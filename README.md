@@ -1,13 +1,61 @@
 # Regression clustering
 
+Code accompanying Vandewouw et al., *Transdiagnostic variation in age-related
+patterns of rich-club organization across neurodevelopmental and related mental
+health conditions*. The MATLAB pipeline in `preprocessing/` goes from the
+resting-state MEG data to the area under the rich-club curve (AURC) for each
+participant and frequency band; these are the features passed to the
+regression clustering.
+
 Bootstrap-aggregated Gaussian-mixture clustering for identifying subgroups of
 participants with shared age-related patterns across a set of features. Each of
 many bootstrap subsamples fits a GMM on the joint (age, features) space and
 runs an OLS regression of each feature on age within every component; a
 participant–feature matrix accumulates votes from significant (p<0.05)
 within-component associations. The matrix is thresholded against a
-permutation-based null (age randomly permuted, full pipeline re-run), and a
-hierarchical clustering is fit to the thresholded matrix.
+permutation-based null (the same procedure with age randomly permuted in the
+regressions), and a hierarchical clustering is fit to the thresholded matrix.
+
+## Preprocessing
+
+Run the scripts in order from inside `preprocessing/`:
+
+1. `p01_epoching.m` — 10 s epochs, jump artifact rejection
+2. `p02_ica.m` — ICA; components to remove are chosen from the saved plots
+3. `p03_artifact_rejection.m` — removes ICA components, rejects epochs over
+   2000 fT or with more than 10 mm of head motion
+4. `p04_head_model.m` — MRI co-registration and single-shell head models
+5. `p05_beamformer.m` — LCMV beamformer at the 90 AAL regions
+6. `p06_connectivity.m` — band-pass filtering, leakage correction, amplitude
+   envelope correlation
+7. `p07_omst_threshold.m` — OMST thresholding
+8. `p08_null_networks.m` — 1000 random networks per participant and band
+9. `p09_rich_club.m` — normalized weighted rich-club coefficients and
+   FDR-corrected p-values
+10. `p10_aurc.m` — AURC for each band, written to `AURC.csv`
+
+All paths and parameters are in `pipeline_config.m`. Set the participant
+spreadsheet, data directories and bad-channel list (one channel name per line,
+specific to your MEG system) there before running.
+
+The participant spreadsheet has one row per participant with the columns
+`UniqueID`, `Visit`, `Run`, `Sex`, `Age`, `MEG_Rest` (path to the CTF `.ds`),
+`megprep_ica` (comma-separated ICA components to remove), `T1`,
+`T1_fiducial_nas`, `T1_fiducial_lpa`, `T1_fiducial_rpa`, `fiducial_notes`
+(see `p04_head_model.m`) and `including_final` (1 for participants with at
+least 12 clean epochs, one run per participant).
+
+Toolboxes go in `preprocessing/repos/`:
+
+- [FieldTrip](https://www.fieldtriptoolbox.org/) — `repos/fieldtrip`
+- [HeadMotion](https://github.com/MabbottLab/MEGneto/tree/d6b5d4a0dbc759727237478fdc0f1ac021d91fe8/functions/functions/HeadMotion) from MEGneto — `repos/MEGneto`
+- [MEG-ROI-nets](https://github.com/OHBA-analysis/MEG-ROI-nets) — `repos/MEG-ROI-nets`
+- [Brain Connectivity Toolbox](https://sites.google.com/site/bctnet/), 2019-03-03 release — `repos/2019_03_03_BCT`
+- [topological_filtering_networks](https://github.com/stdimitr/topological_filtering_networks) — `repos/topological_filtering_networks`
+- [GRETNA](https://www.nitrc.org/projects/gretna/) 2.0.0 — `repos/GRETNA_2.0.0_release_20171121`
+
+[fdr_bh](https://www.mathworks.com/matlabcentral/fileexchange/27418-fdr_bh) goes
+in `preprocessing/functions/`. The Signal Processing Toolbox is also needed.
 
 ## Install
 
@@ -35,13 +83,17 @@ run_pipeline(
     output_dir="rc_outputs",
     prefix="my_cohort",
     subsample_size=int(0.632 * len(age)),  # 63.2% of N (Breiman, 1996)
-    n_iter=100000,                         # bootstrap iterations
+    n_iter=10000,                          # bootstrap iterations
     n_perm=100,                            # null permutations of age
     cluster_max=5,                         # max k for hierarchical clustering
     n_jobs=-1,                             # parallel workers
     seed=10,
 )
 ```
+
+In the paper, `x` and `y` were the `Age` and five band columns of `AURC.csv`,
+run separately for females and males with `subsample_size=130` (63.2% of the
+female sample) for both.
 
 Outputs written to `output_dir`:
 
